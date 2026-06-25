@@ -1,6 +1,6 @@
 import express from "express";
 import firstResponse from "../types/firstResponse";
-import something from './something/something.routes'
+import authRoutes from './auth/auth.routes';
 const router = express.Router();
 
 router.get<{}, firstResponse>('/', (req, res) => {
@@ -9,5 +9,5 @@ router.get<{}, firstResponse>('/', (req, res) => {
     })
 })
 
-router.use('/something', something)
+router.use('/auth', authRoutes);
 export default router
