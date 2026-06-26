@@ -1,56 +1,47 @@
-import { Request, Response, NextFunction } from 'express';
-import { createTask, getTasks, getTaskById, updateTask, deleteTask } from './tasks.services';
-import { AppError } from '../../utils/appError';
+import { Response, NextFunction } from 'express';
+import * as taskService from './tasks.services';
 import { successResponse } from '../../utils/responses';
+import { AuthRequest } from '../../middlewares/protectRoutes';
 
-export const createTaskHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const createTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const task = await createTask(req.body);
+    const task = await taskService.createTask(req.params.projectId, req.body, req.user!);
     successResponse(res, 201, 'Task created successfully', { task });
   } catch (error) {
     next(error);
   }
 };
 
-export const getAllTasksHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const getTasks = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const result = await getTasks(req.query);
+    const result = await taskService.getTasks(req.params.projectId, req.query, req.user!);
     successResponse(res, 200, 'Tasks retrieved successfully', result);
   } catch (error) {
     next(error);
   }
 };
 
-export const getTaskHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const getTaskById = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const task = await getTaskById(req.params.id);
-    if (!task) {
-      return next(new AppError('Task not found', 404));
-    }
+    const task = await taskService.getTaskById(req.params.projectId, req.params.taskId, req.user!);
     successResponse(res, 200, 'Task retrieved successfully', { task });
   } catch (error) {
     next(error);
   }
 };
 
-export const updateTaskHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const updateTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const task = await updateTask(req.params.id, req.body);
-    if (!task) {
-      return next(new AppError('Task not found', 404));
-    }
+    const task = await taskService.updateTask(req.params.projectId, req.params.taskId, req.body, req.user!);
     successResponse(res, 200, 'Task updated successfully', { task });
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteTaskHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const task = await deleteTask(req.params.id);
-    if (!task) {
-      return next(new AppError('Task not found', 404));
-    }
+    await taskService.deleteTask(req.params.projectId, req.params.taskId, req.user!);
     successResponse(res, 200, 'Task deleted successfully');
   } catch (error) {
     next(error);

@@ -10,13 +10,15 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
-    "start": "node dis/index.js"
+    "start": "node dis/index.js",
+    "test": "jest --forceExit --detectOpenHandles"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "dotenv": "^8.2.0",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.4.0",
     "mongoose": "^8.12.2",
     "node-fetch": "^3.3.2",
     "tsx": "^4.19.3",
@@ -25,7 +27,10 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^5.0.1",
+    "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.5",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.3.4"
   }
 }

@@ -1,12 +1,30 @@
 import { Task, ITask } from './tasks.model';
+import { Project } from '../projects/projects.model';
+import { AppError } from '../../utils/appError';
+import { IUser } from '../auth/auth.model';
 
-export const createTask = async (data: any): Promise<ITask> => {
-  const task = new Task(data);
+const verifyProjectAccess = async (projectId: string, user: IUser) => {
+  const project = await Project.findById(projectId);
+  if (!project) {
+    throw new AppError('Project not found', 404);
+  }
+  if (user.role !== 'Admin' && project.owner.toString() !== user._id.toString()) {
+    throw new AppError('Forbidden: You do not own this project', 403);
+  }
+  return project;
+};
+
+export const createTask = async (projectId: string, data: any, user: IUser): Promise<ITask> => {
+  await verifyProjectAccess(projectId, user);
+
+  const task = new Task({ ...data, project: projectId });
   await task.save();
   return task;
 };
 
-export const getTasks = async (query: any) => {
+export const getTasks = async (projectId: string, query: any, user: IUser) => {
+  await verifyProjectAccess(projectId, user);
+
   const page = parseInt(query.page as string) || 1;
   const limit = parseInt(query.limit as string) || 10;
   const sortBy = (query.sortBy as string) || 'createdAt';
@@ -14,17 +32,15 @@ export const getTasks = async (query: any) => {
 
   const skip = (page - 1) * limit;
 
-  // Build dynamic filter
-  const filter: any = {};
-  if (query.project) filter.project = query.project;
+  // Build dynamic filter — always scoped to this project
+  const filter: any = { project: projectId };
   if (query.status) filter.status = query.status;
   if (query.priority) filter.priority = query.priority;
 
   const tasks = await Task.find(filter)
     .sort({ [sortBy]: order })
     .skip(skip)
-    .limit(limit)
-    .populate('project', 'title status'); // populate project details
+    .limit(limit);
 
   const total = await Task.countDocuments(filter);
 
@@ -39,14 +55,37 @@ export const getTasks = async (query: any) => {
   };
 };
 
-export const getTaskById = async (id: string): Promise<ITask | null> => {
-  return Task.findById(id).populate('project', 'title status');
+export const getTaskById = async (projectId: string, taskId: string, user: IUser): Promise<ITask> => {
+  await verifyProjectAccess(projectId, user);
+
+  const task = await Task.findOne({ _id: taskId, project: projectId });
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
+  return task;
 };
 
-export const updateTask = async (id: string, data: any): Promise<ITask | null> => {
-  return Task.findByIdAndUpdate(id, data, { new: true, runValidators: true }).populate('project', 'title status');
+export const updateTask = async (projectId: string, taskId: string, data: any, user: IUser): Promise<ITask> => {
+  await verifyProjectAccess(projectId, user);
+
+  const task = await Task.findOne({ _id: taskId, project: projectId });
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
+
+  Object.assign(task, data);
+  await task.save();
+  return task;
 };
 
-export const deleteTask = async (id: string): Promise<ITask | null> => {
-  return Task.findByIdAndDelete(id);
+export const deleteTask = async (projectId: string, taskId: string, user: IUser): Promise<ITask> => {
+  await verifyProjectAccess(projectId, user);
+
+  const task = await Task.findOne({ _id: taskId, project: projectId });
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
+
+  await task.deleteOne();
+  return task;
 };

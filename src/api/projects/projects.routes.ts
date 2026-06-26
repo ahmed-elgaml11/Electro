@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import {
-  createProjectHandler,
-  getAllProjectsHandler,
-  getProjectHandler,
-  updateProjectHandler,
-  deleteProjectHandler,
+  createProject,
+  getProjects,
+  getProject,
+  updateProject,
+  deleteProject,
 } from './projects.controllers';
 import { validate } from '../../middlewares/validate';
 import { protect, restrictTo } from '../../middlewares/protectRoutes';
 import { createProjectSchema, updateProjectSchema, queryProjectSchema, idParamSchema } from './projects.schema';
+import taskRoutes from '../tasks/tasks.routes';
 
 const router = Router();
 
@@ -19,30 +20,33 @@ router
   .route('/')
   .get(
     restrictTo('Admin', 'Member'),
-    validate(queryProjectSchema),
-    getAllProjectsHandler
+    validate({ query: queryProjectSchema }),
+    getProjects
   )
   .post(
-    restrictTo('Admin'),
-    validate(createProjectSchema),
-    createProjectHandler
+    restrictTo('Admin', 'Member'),
+    validate({ body: createProjectSchema }),
+    createProject
   );
 
 router
   .route('/:id')
-  .all(validate(idParamSchema))
+  .all(validate({ params: idParamSchema }))
   .get(
     restrictTo('Admin', 'Member'),
-    getProjectHandler
+    getProject
   )
   .patch(
-    restrictTo('Admin'),
-    validate(updateProjectSchema),
-    updateProjectHandler
+    restrictTo('Admin', 'Member'),
+    validate({ body: updateProjectSchema }),
+    updateProject
   )
   .delete(
-    restrictTo('Admin'),
-    deleteProjectHandler
+    restrictTo('Admin', 'Member'),
+    deleteProject
   );
+
+// Nest task routes under /projects/:projectId/tasks
+router.use('/:projectId/tasks', taskRoutes);
 
 export default router;

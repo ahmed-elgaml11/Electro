@@ -1,49 +1,53 @@
 import { Router } from 'express';
 import {
-  createTaskHandler,
-  getAllTasksHandler,
-  getTaskHandler,
-  updateTaskHandler,
-  deleteTaskHandler,
+  createTask,
+  getTasks,
+  getTaskById,
+  updateTask,
+  deleteTask,
 } from './tasks.controllers';
 import { validate } from '../../middlewares/validate';
 import { protect, restrictTo } from '../../middlewares/protectRoutes';
-import { createTaskSchema, updateTaskSchema, queryTaskSchema } from './tasks.schema';
-import { idParamSchema } from '../projects/projects.schema';
+import { createTaskSchema, updateTaskSchema, queryTaskSchema, taskIdParamSchema, projectIdParamSchema } from './tasks.schema';
 
-const router = Router();
+// mergeParams: true allows access to :projectId from the parent router
+const router = Router({ mergeParams: true });
 
-// Apply protect middleware to all task routes
+// All task routes require authentication
 router.use(protect);
 
 router
   .route('/')
   .get(
     restrictTo('Admin', 'Member'),
-    validate(queryTaskSchema),
-    getAllTasksHandler
+    validate({ params: projectIdParamSchema }),
+    validate({ query: queryTaskSchema }),
+    getTasks
   )
   .post(
-    restrictTo('Admin'),
-    validate(createTaskSchema),
-    createTaskHandler
+    restrictTo('Admin', 'Member'),
+    validate({ params: projectIdParamSchema }),
+    validate({ body: createTaskSchema }),
+    createTask
   );
 
 router
-  .route('/:id')
-  .all(validate(idParamSchema))
+  .route('/:taskId')
   .get(
     restrictTo('Admin', 'Member'),
-    getTaskHandler
+    validate({ params: taskIdParamSchema }),
+    getTaskById
   )
   .patch(
-    restrictTo('Admin'),
-    validate(updateTaskSchema),
-    updateTaskHandler
+    restrictTo('Admin', 'Member'),
+    validate({ params: taskIdParamSchema }),
+    validate({ body: updateTaskSchema }),
+    updateTask
   )
   .delete(
-    restrictTo('Admin'),
-    deleteTaskHandler
+    restrictTo('Admin', 'Member'),
+    validate({ params: taskIdParamSchema }),
+    deleteTask
   );
 
 export default router;

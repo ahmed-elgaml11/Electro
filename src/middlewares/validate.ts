@@ -1,10 +1,11 @@
 import type { NextFunction, Request, Response } from "express";
 import type { z } from "zod";
 import { ZodError } from "zod";
-import { errorResponse } from "../utils/responses.js";
+import { errorResponse } from "../utils/responses";
 
 export const validate = <P extends z.ZodSchema, R extends z.ZodSchema, B extends z.ZodSchema, Q extends z.ZodSchema>
-  (schema: { params?: P, response?: R, body?: B, query?: Q }) => (req: Request, res: Response, next: NextFunction) => {
+  (schema: { params?: P, response?: R, body?: B, query?: Q }) => 
+  (req: Request, res: Response, next: NextFunction): void => {
 
     try {
       if (schema.params) {
@@ -32,8 +33,10 @@ export const validate = <P extends z.ZodSchema, R extends z.ZodSchema, B extends
         const first = err.issues?.[0];
         const path = Array.isArray(first?.path) ? first.path.join('.') : first?.path ?? '';
         const message = first?.message ?? err.message;
-        console.log(`${path}: ${message}`)
-        return errorResponse(res, 400, `${path}: ${message}`);
+        console.log(`${path}: ${message}`);
+        errorResponse(res, 400, `${path}: ${message}`);
+        return;
       }
-    };
-  }
+      next(err);
+    }
+  };
