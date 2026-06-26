@@ -1,0 +1,19 @@
+Assumptions and Implementation Notes
+
+1. User vs Member flow:
+   - When a user signs up, their role is set to `Member` by default (the allowed roles are `Admin` and `Member`).
+   - A `Member` can create projects. Upon creation, their user ID is saved as the `owner` of the project.
+   - The endpoint `GET /api/projects` returns all projects if the authenticated user is an `Admin`. If the user is a `Member`, it returns ONLY the projects where the `owner` matches the user's ID.
+   - For tasks, a `Member` can only retrieve, add, update, or delete tasks within a project they own. They cannot access tasks of other projects.
+   - An `Admin` has unrestricted access and can view or manage all projects and tasks in the system.
+
+
+
+
+2. Infrastructure:
+   - Added a `docker-compose.yml` and `Dockerfile` to simplify running the app locally with remotely MongoDB.
+   - Created a `seed.ts` script to populate initial data for testing (run it via `npx tsx seed.ts`)
+   - Exported a Postman collection (`postman_collection.json`) for easy API testing.
+
+
+-- Node.js v26 is a current release and may have compatibility issues with some packages and DNS resolution. It's recommended to use Node.js 22 LTS, which is the stable, production-ready version and is fully supported by most libraries.
