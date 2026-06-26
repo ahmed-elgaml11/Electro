@@ -5,7 +5,7 @@ import { Project } from './src/api/projects/projects.model';
 import { Task } from './src/api/tasks/tasks.model';
 import bcrypt from 'bcrypt';
 
-dotenv.config({ path: './config.env' }); // or .env based on actual path
+dotenv.config({ path: './.env' }); 
 
 const seedDB = async () => {
   try {
